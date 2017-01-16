@@ -61,6 +61,14 @@ def gradient_descent(method, W, learning_rate, anneal, early_stop, mini_batch):
                 print train_loss, train_error, holdout_loss, holdout_error, test_loss, test_error
                 method.losses = np.hstack([method.losses, [[train_loss], [holdout_loss], [test_loss]]])
                 method.errors = np.hstack([method.errors, [[train_error], [holdout_error], [test_error]]])
+
+                if i != 0 and method.errors[1, -1] >= method.errors[1, -2]:
+                    up_epoch += 1
+                    if up_epoch == early_stop:
+                        idx = method.errors[1, :].argmin()
+                        return weights[idx]
+                else:
+                    up_epoch = 0
             else:
                 method.losses = np.hstack([method.losses, [[train_loss], [test_loss]]])
                 method.errors = np.hstack([method.errors, [[train_error], [test_error]]])
@@ -69,14 +77,6 @@ def gradient_descent(method, W, learning_rate, anneal, early_stop, mini_batch):
             weights.append(W)
             W += learning_rate * dW
             start, end = start + batch_size, end + batch_size if j != mini_batch - 1 else n
-        if early_stop:
-            if i != 0 and method.errors[1, -1] >= method.errors[1, -1 - mini_batch]:
-                up_epoch += 1
-                if up_epoch == early_stop:
-                    idx = method.errors[1, :].argmin()
-                    return weights[idx]
-            else:
-                up_epoch = 0
     return W
 
 
@@ -93,7 +93,7 @@ def plot_errors(method):
     ax.plot(range(method.errors[0].size), 1 - method.errors[0], label="train error")
     ax.plot(range(method.errors[1].size), 1 - method.errors[1], label="hold out error")
     ax.plot(range(method.errors[2].size), 1 - method.errors[2], label="test error")
-    ax.legend()
+    ax.legend(loc="lower right")
 
 
 def nesterov_momentum(method, W, learning_rate, mu, anneal, early_stop):
@@ -184,11 +184,6 @@ class Logistic:
             gradient += self.reg_weight * reg_grad
         return gradient
 
-    def plot_weight(self):
-        weight_graph = self.weight[:, :-1].reshape(28, 28)
-        plt.imshow(weight_graph, cmap="gray")
-        plt.show()
-
     # test on the test set
     def test(self, X_test, t_test, weight=0):
         X_test, t_test = self.select_numbers(test_images, test_labels, self.num1, self.num2)
@@ -197,6 +192,18 @@ class Logistic:
             return self.eval_loss_and_error(X_test, t_test, self.weight)
         else:
             return self.eval_loss_and_error(X_test, t_test, weight)
+
+    def plot_weight(self):
+        weight_graph = self.weight[:, :-1].reshape(28, 28)
+        fig, ax = plt.subplots()
+        ax.imshow(weight_graph, cmap="gray")
+
+    def plot_losses(self):
+        plot_losses(self)
+
+    def plot_errors(self):
+        plot_errors(self)
+
 
 
 class Softmax():
@@ -254,14 +261,20 @@ class Softmax():
         else:
             return self.eval_loss_and_error(X_test, t_test, weight)
 
+    def plot_losses(self):
+        plot_losses(self)
+
+    def plot_errors(self):
+        plot_errors(self)
+
 if __name__ == '__main__':
     train_images, train_labels, test_images, test_labels = load_images()
     logistic = Logistic(train_images, train_labels, learning_rate=1e0, anneal=1e1, early_stop=3, mini_batch=100)
     print logistic.test(test_images, test_labels)
-    plot_losses(logistic)
-    plot_errors(logistic)
+    logistic.plot_losses()
+    logistic.plot_errors()
+    logistic.plot_weight()
     plt.show()
-    #logistic.plot_weight()
     #softmax = Softmax(train_images, train_labels, learning_rate=1, anneal=1e1, reg_type="L2", reg_weight=1e-4, mini_batch=10)
     #softmax = Softmax(train_images, train_labels, method="NAG", anneal=1, early_stop=5, reg_type="L2", reg_weight=1e-1)
     #print softmax.test(test_images, test_labels)
