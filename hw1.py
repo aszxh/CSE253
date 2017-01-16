@@ -61,14 +61,6 @@ def gradient_descent(method, W, learning_rate, anneal, early_stop, mini_batch):
                 print train_loss, train_error, holdout_loss, holdout_error, test_loss, test_error
                 method.losses = np.hstack([method.losses, [[train_loss], [holdout_loss], [test_loss]]])
                 method.errors = np.hstack([method.errors, [[train_error], [holdout_error], [test_error]]])
-
-                if i != 0 and method.errors[1, -1] >= method.errors[1, -2]:
-                    up_epoch += 1
-                    if up_epoch == early_stop:
-                        idx = method.errors[1, :].argmin()
-                        return weights[idx]
-                else:
-                    up_epoch = 0
             else:
                 method.losses = np.hstack([method.losses, [[train_loss], [test_loss]]])
                 method.errors = np.hstack([method.errors, [[train_error], [test_error]]])
@@ -77,6 +69,14 @@ def gradient_descent(method, W, learning_rate, anneal, early_stop, mini_batch):
             weights.append(W)
             W += learning_rate * dW
             start, end = start + batch_size, end + batch_size if j != mini_batch - 1 else n
+        if early_stop:
+            if i != 0 and method.errors[1, -1] >= method.errors[1, -1 - mini_batch]:
+                up_epoch += 1
+                if up_epoch == early_stop:
+                    idx = method.errors[1, :].argmin()
+                    return weights[idx]
+            else:
+                up_epoch = 0
     return W
 
 
