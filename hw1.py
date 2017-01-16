@@ -80,6 +80,22 @@ def gradient_descent(method, W, learning_rate, anneal, early_stop, mini_batch):
     return W
 
 
+def plot_losses(method):
+    fig, ax = plt.subplots()
+    ax.plot(range(method.losses[0].size), method.losses[0], label="train loss")
+    ax.plot(range(method.losses[1].size), method.losses[1], label="hold out loss")
+    ax.plot(range(method.losses[2].size), method.losses[2], label="test loss")
+    ax.legend()
+
+
+def plot_errors(method):
+    fig, ax = plt.subplots()
+    ax.plot(range(method.errors[0].size), 1 - method.errors[0], label="train error")
+    ax.plot(range(method.errors[1].size), 1 - method.errors[1], label="hold out error")
+    ax.plot(range(method.errors[2].size), 1 - method.errors[2], label="test error")
+    ax.legend()
+
+
 def nesterov_momentum(method, W, learning_rate, mu, anneal, early_stop):
     X, t = method.X, method.t
     v = 0
@@ -242,6 +258,9 @@ if __name__ == '__main__':
     train_images, train_labels, test_images, test_labels = load_images()
     logistic = Logistic(train_images, train_labels, learning_rate=1e0, anneal=1e1, early_stop=3, mini_batch=100)
     print logistic.test(test_images, test_labels)
+    plot_losses(logistic)
+    plot_errors(logistic)
+    plt.show()
     #logistic.plot_weight()
     #softmax = Softmax(train_images, train_labels, learning_rate=1, anneal=1e1, reg_type="L2", reg_weight=1e-4, mini_batch=10)
     #softmax = Softmax(train_images, train_labels, method="NAG", anneal=1, early_stop=5, reg_type="L2", reg_weight=1e-1)
